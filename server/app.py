@@ -34,23 +34,59 @@ class IndexArticle(Resource):
         return articles, 200
 
 class ShowArticle(Resource):
+    pass
 
-    def get(self, id):
-        session['page_views'] = 0 if not session.get('page_views') else session.get('page_views')
-        session['page_views'] += 1
+    # def get(self, id):
+    #     session['page_views'] = 0 if not session.get('page_views') else session.get('page_views')
+    #     session['page_views'] += 1
 
-        if session['page_views'] <= 3:
+    #     if session['page_views'] <= 3:
 
-            article = Article.query.filter(Article.id == id).first()
-            article_json = jsonify(article.to_dict())
+    #         article = Article.query.filter(Article.id == id).first()
+    #         article_json = jsonify(article.to_dict())
 
-            return make_response(article_json, 200)
+    #         return make_response(article_json, 200)
 
-        return {'message': 'Maximum pageview limit reached'}, 401
+    #     return {'message': 'Maximum pageview limit reached'}, 401
+    
+
+class Login(Resource):
+
+    def post(self):
+        data = request.get_json()
+        user = User.query.filter(User.username == data.get("username")).first()
+        session["user_id"] = user.id
+        return user.to_dict(), 200
+    
+
+class Logout(Resource):
+
+    def delete(self):
+        session["user_id"] = None
+        return {}, 204
+
+
+class CheckSession(Resource):
+
+    def get(self):
+        if session["user_id"]:
+            user = User.query.filter(User.id == session["user_id"]).first()
+            return user.to_dict(), 200
+        else:
+            return {}, 401
+
+
+
+
 
 api.add_resource(ClearSession, '/clear')
 api.add_resource(IndexArticle, '/articles')
 api.add_resource(ShowArticle, '/articles/<int:id>')
+api.add_resource(Login, '/login')
+api.add_resource(Logout, '/logout')
+api.add_resource(CheckSession, '/check_session')
+
+
 
 
 if __name__ == '__main__':
